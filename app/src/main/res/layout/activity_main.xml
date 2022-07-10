@@ -45,4 +45,14 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/etWordEntry"
         app:layout_constraintVertical_bias="0.064" />
+
+    <TextView
+        android:id="@+id/tvDefs"
+        android:layout_width="309dp"
+        android:layout_height="298dp"
+        android:text=""
+        app:layout_constraintBottom_toTopOf="@+id/etWordEntry"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/tvEnteredWord" />
 </androidx.constraintlayout.widget.ConstraintLayout>

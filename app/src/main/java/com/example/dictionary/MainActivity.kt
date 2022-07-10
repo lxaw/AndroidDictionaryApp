@@ -9,13 +9,12 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.annotation.RequiresApi
 import kotlinx.coroutines.*
-import java.net.HttpURLConnection
-import java.net.URL
+import kotlinx.coroutines.Dispatchers.Main
 import org.jsoup.Jsoup
 import org.jsoup.select.Elements
-import org.w3c.dom.Document
 import java.io.IOException
-import java.lang.StringBuilder
+import kotlin.system.exitProcess
+import kotlin.text.StringBuilder
 
 class MainActivity : AppCompatActivity() {
     val URL_BASE : String = "https://dictionary.goo.ne.jp/word/"
@@ -33,6 +32,8 @@ class MainActivity : AppCompatActivity() {
         var etWordEntry = findViewById<EditText>(R.id.etWordEntry)
         // for button press
         var btnSearch = findViewById<Button>(R.id.btnSearch)
+        // for definitions
+        var tvDefs = findViewById<TextView>(R.id.tvDefs)
 
         btnSearch.setOnClickListener{
             Toast.makeText(this@MainActivity,"検索中...",Toast.LENGTH_SHORT).show()
@@ -43,16 +44,24 @@ class MainActivity : AppCompatActivity() {
             tvEnteredWord.text = strSearchText
 
             CoroutineScope(Dispatchers.Default).launch{
-                sendWordToGoo(strSearchText)
+                val strbldrRes:StringBuilder = sendWordToGoo(strSearchText)
+                withContext(Main){
+                    // update def text
+                    //
+                    tvDefs.text = strbldrRes.toString()
+                }
             }
         }
     }
 
     @RequiresApi(Build.VERSION_CODES.N)
     // with help from https://www.tutorialspoint.com/how-to-parse-html-in-android-using-kotlin
-    private suspend fun sendWordToGoo(strWord:String){
+    private suspend fun sendWordToGoo(strWord:String): StringBuilder{
         val strNewUrl =this.URL_BASE + strWord + "/"
         val strBuilder = StringBuilder()
+
+        val arrstrResults = arrayListOf<String>()
+
         try{
             val doc: org.jsoup.nodes.Document = Jsoup.connect(strNewUrl).get()
             /*
@@ -60,11 +69,25 @@ class MainActivity : AppCompatActivity() {
              under <li>
              under <p class = 'text'>
              */
-            val meanings :Elements = doc.select("")
+            val classMeaning:Elements = doc.select(".meaning")
+            for(ol in classMeaning){
+                val classTexts = ol.select(".text")
+                for(p in classTexts){
+                    arrstrResults.add(p.text())
+                }
+            }
 
         }catch(e: IOException){
-
+            println("io exception error")
+            exitProcess(1)
         }
 
+        // turn into set to remove any duplicates
+        // and add to string builder
+        //
+        for(strDef in arrstrResults.toSet()){
+            strBuilder.append(strDef).append("\n")
+        }
+        return strBuilder
     }
 }
